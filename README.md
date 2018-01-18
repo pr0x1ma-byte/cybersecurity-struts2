@@ -14,3 +14,4 @@ The Jakarta MultiPart Parser:
 
 The Struts2 Dispatcher: org.apache.struts2.dispatcher.Dispatcher
 
+![Dispatcher](src/main/resources/META-INF/resources/images/wrapRequest.png)
