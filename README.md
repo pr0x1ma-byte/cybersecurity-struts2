@@ -10,15 +10,17 @@ To simply run the webapp:
 If you want to modify this source, the project uses the Maven build system:
 * When modifying source: mvn package (create .jar)
 
+NVD [CVE-2017-5638](https://nvd.nist.gov/vuln/detail/CVE-2017-5638)
+
 ## The Payload
 
 The clever aspect of this vulernability is the exploitation of OGNL (Object Graph Navigation Library).
 
-OGNL uses expressions to perform tasks, and two of the expressions that are allowed is the ability to invoke arbitrary classes in the framework, and chain events. 
+OGNL uses expressions to perform tasks, and two of the expressions that are allowed is the ability to invoke arbitrary classes in the framework, and chain events. Reference guide [OGNL Language Guide](https://commons.apache.org/proper/commons-ognl/language-guide.html).
 
 So for example, it is possible then to instantiate edu.uvu.ms.cybersecurity.Command object with OGNL 
  
-    '(#p=new edu.uvu.ms.cybersecurity.Command(#cmd))).'
+    (#cmd='whoami').(#p=new edu.uvu.ms.cybersecurity.Command(#cmd)))
      
  Or, in a more practical sense, one can invoke the java.lang.ProcessBuilder class to run system level commands 
   
