@@ -8,5 +8,9 @@ To simply run the webapp:
 If you want to modify this source, the project uses the Maven build system:
 * When modifying source: mvn package (create .jar)
 
+## The Breakdown
 
+The Jakarta MultiPart Parser:
+
+The Struts2 Dispatcher: org.apache.struts2.dispatcher.Dispatcher
 
