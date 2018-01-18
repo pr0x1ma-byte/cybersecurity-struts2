@@ -20,7 +20,24 @@ OGNL uses expressions to perform tasks, and two of the expressions that are allo
 
 So for example, it is possible then to instantiate edu.uvu.ms.cybersecurity.Command object with OGNL 
  
-    (#cmd='whoami').(#p=new edu.uvu.ms.cybersecurity.Command(#cmd)))
+    //  OGNL expression to instantiate Command obj
+    (#cmd='whoami').(#p=new edu.uvu.ms.cybersecurity.Command(#cmd))
+  
+The edu.uvu.ms.cybersecurity.Command class
+
+    // Command simply prints the cmd argument passed from the OGNL expression
+    public class Command {
+      private Object cmd;
+      
+      public Command(Object cmd){
+        this.cmd = cmd;
+        print();
+      }
+
+      private void print(){
+          System.out.println("OGNL recieved cmd: "+this.cmd);
+      }
+    }
      
  Or, in a more practical sense, one can invoke the java.lang.ProcessBuilder class to run system level commands 
   
