@@ -46,7 +46,7 @@ The result being that any OGLN expressions are now executed
 ![Dispatcher](src/main/resources/META-INF/resources/images/OglnTextParser-evaluate.png)
 
 ### The Payload
-This payload was pulled from ![Talos Intelligence](http://blog.talosintelligence.com/2017/03/apache-0-day-exploited.html)
+This payload was pulled from [Talos Intelligence](http://blog.talosintelligence.com/2017/03/apache-0-day-exploited.html)
 
 The payload can be executed through CURL or POSTMAN
 
