@@ -10,7 +10,8 @@ To simply run the webapp:
 If you want to modify this source, the project uses the Maven build system:
 * When modifying source: mvn package (create .jar)
 
-### The Payload
+## The Payload
+
 The clever aspect of this vulernability is the exploitation of OGNL (Object Graph Navigation Library).
 
 OGNL uses expressions to perform tasks, and two of the expressions that are allowed is the ability to invoke arbitrary classes in the framework, and chain events. 
@@ -31,11 +32,11 @@ The following payload contains a command to invoke edu.uvu.ms.cybersecurity.Comm
 
 A portion of this payload was pulled from [Rapid7 GitHub](https://github.com/rapid7/metasploit-framework/issues/8064)
 
-### The Breakdown (as viewed from my IDE)
+## The Breakdown (as viewed from my IDE)
 
 The Jakarta MultiPart Parser:
    
-The issue is how the Parser doesn't escape incoming values in the Content-Type header. What this means is that an OGLN expression can be packaged into the Content-Header. When the header is determined that it is MultiPart it sends it off to the OglnTextParser.class, which simply interprets the OGLN expression and subsequently ends up executing arbitrary commands.
+The issue is how the Parser doesn't escape incoming values in the Content-Type header. What this means is that an OGNL expression can be packaged into the Content-Header. When the header is determined that it is MultiPart it sends it off to the OgnlTextParser.class, which simply interprets the OGNL expression and subsequently ends up executing arbitrary commands.
 
 The following is a step-by-step look at how this vulnerability is exploited.
 
@@ -44,11 +45,11 @@ The Struts2 Dispatcher: org.apache.struts2.dispatcher.Dispatcher
 The Struts Dispatcher.class receives the request, and determines that it should be handled by the JakartaMultiPartRequest.class parser method (matches on multipart/form-data in String)
 ![Dispatcher](src/main/resources/META-INF/resources/images/Dispatcher-wrapRequest.png)
 
-The OGLN expression from the Content-Header is then passed into the 'parse' method.
+The OGNL expression from the Content-Header is then passed into the 'parse' method.
 
 ![Dispatcher](src/main/resources/META-INF/resources/images/JakartaMultiPartRequest-parse.png)
 
-During the parsing attempt, an exception is thrown as it is unable to parse the OGLN expression, and ends up in JakartaMultiPartRequest.class buildError method
+During the parsing attempt, an exception is thrown as it is unable to parse the OGNL expression, and ends up in JakartaMultiPartRequest.class buildError method
 
 ![Dispatcher](src/main/resources/META-INF/resources/images/JakartaMultiPartRequest-buildError.png)
 
@@ -60,11 +61,11 @@ The LocalizedTextUtil.class findText method will in turn call getDefaultMessage 
 
 ![Dispatcher](src/main/resources/META-INF/resources/images/LocalizedTextUtil-getDefaultMessage.png)
 
-The TextParseUtil.class translateVariables method delegates to the OglnTextParser.class evaluate method
+The TextParseUtil.class translateVariables method delegates to the OgnlTextParser.class evaluate method
 
 ![Dispatcher](src/main/resources/META-INF/resources/images/TextParseUtil-translateVariables.png)
 
-The result being that any OGLN expressions are now executed
+The result being that any OGNL expressions are now executed
 
 ![Dispatcher](src/main/resources/META-INF/resources/images/OglnTextParser-evaluate.png)
 
