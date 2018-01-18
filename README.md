@@ -4,11 +4,13 @@
 
 To simply run the webapp:
 * java -jar ms-cybersecurity-1.jar (uses embedded Tomcat)
+* Java 1.8
+* the webapp boots on port 8080 by default (localhost:8080)
 
 If you want to modify this source, the project uses the Maven build system:
 * When modifying source: mvn package (create .jar)
 
-## The Breakdown
+## The Breakdown (as viewed from my IDE)
 
 The Jakarta MultiPart Parser:
    
