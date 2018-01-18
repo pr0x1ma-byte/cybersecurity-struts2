@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>edu.uvu.ms.cybersecurity</groupId>
-    <artifactId>uvu-ms-cybersecurity</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>ms-cybersecurity</artifactId>
+    <version>1</version>
 
     <name>ms-uvu-cybersecurity</name>
 
