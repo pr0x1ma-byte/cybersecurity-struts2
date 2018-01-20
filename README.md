@@ -9,11 +9,15 @@
 To run the webapp:
 * java -jar ms-cybersecurity-1.jar (uses embedded Tomcat)
 * Java 1.8
-* the webapp boots on port 8080 by default (http://localhost:8080/MSCybersecurity)
+* the webapp boots on port 80 by default (http://localhost:80/MSCybersecurity)
 
 To Send commands:
-*blank url defaults to http://localhost:8080/MSCybersecurity*
-* java -jar send.jar
+
+*blank url defaults to http://localhost:80/MSCybersecurity/exploit, you must be on /exploit endpoint*
+
+*if you are running on a mac you will have to change from port 80 to something (it's reserved)*
+
+* java -jar Send.jar
 
 If you want to modify this source, the project uses the Maven build system:
 * When modifying source: mvn package (create .jar)
