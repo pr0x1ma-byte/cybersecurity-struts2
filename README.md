@@ -1,4 +1,8 @@
-# Apache Struts2 Vulnerability | CVE-2017-5638 | Struts2 Version 2.5
+# Apache Struts2 Vulnerability | CVE-2017-5638 | Version 2.5
+
+## Disclaimer
+
+*This is meant for educational, and research purposes only. I do not authorize or endorse any illegal or unethical use of this projects contents or information*
 
 ## Instructions
 
