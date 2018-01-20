@@ -17,6 +17,8 @@ To Send commands:
 
 *if you are running on a mac you will have to change from port 80 to something (it's reserved)*
 
+![send](src/main/resources/META-INF/resources/images/send.png)
+
 * java -jar Send.jar
 
 If you want to modify this source, the project uses the Maven build system:
