@@ -11,11 +11,11 @@ To run the webapp:
 * Java 1.8
 * the webapp boots on port 80 by default (http://localhost:80/MSCybersecurity)
 
-To Send commands:
+*if you are running on a mac you will have to change from port 80 to something (it's reserved)*
+
+To Send commands use command line emulator (Send.jar) [project](https://github.com/grant100/cybersecurity-struts2-send):
 
 *blank url defaults to http://localhost:80/MSCybersecurity/exploit, you must be on /exploit endpoint*
-
-*if you are running on a mac you will have to change from port 80 to something (it's reserved)*
 
 ![send](src/main/resources/META-INF/resources/images/send.png)
 
