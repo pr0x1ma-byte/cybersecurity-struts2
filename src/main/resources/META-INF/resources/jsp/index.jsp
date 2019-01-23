@@ -1,4 +1,3 @@
-<%@ taglib prefix="s" uri="/struts-tags" %>
 <!doctype html>
 <html lang="en">
 <head>
